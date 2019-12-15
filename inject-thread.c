@@ -119,7 +119,7 @@ static int resolve_libdl_symbols()
 	if (err < 0)
 		goto out;
 
-	printf("[+] mapped %d regions\n", libdl.region_count);
+	printf("[+] mapped %zu regions\n", libdl.region_count);
 
 	printf("[-] locating dynamic symbol table of libdl...\n");
 
@@ -163,7 +163,7 @@ static int resolve_libpthread_symbols()
 	if (err < 0)
 		goto out;
 
-	printf("[+] mapped %d regions\n", libpthread.region_count);
+	printf("[+] mapped %zu regions\n", libpthread.region_count);
 
 	printf("[-] locating dynamic symbol table of libpthread...\n");
 
@@ -207,7 +207,7 @@ static int locate_syscall_trampoline()
 	if (err < 0)
 		goto out;
 
-	printf("[+] mapped %d regions\n", libc.region_count);
+	printf("[+] mapped %zu regions\n", libc.region_count);
 
 	printf("[-] locating SYSCALL instruction in libc...\n");
 
@@ -355,6 +355,13 @@ static int resume_shell_thread()
 	return resume_thread(shell_tid);
 }
 
+static int wait_for_shell_thread_enter()
+{
+	printf("[-] waiting for helper thread start...\n");
+
+	return ignore_thread_stop(shell_tid);
+}
+
 static int wait_for_shell_thread_exit()
 {
 	printf("[-] waiting for helper to exit...\n");
@@ -405,6 +412,10 @@ static int inject_thread()
 		goto detach;
 
 	err = spawn_shell_thread();
+	if (err)
+		goto detach;
+
+	err = wait_for_shell_thread_enter();
 	if (err)
 		goto detach;
 
